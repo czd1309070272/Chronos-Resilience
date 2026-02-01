@@ -135,7 +135,7 @@ const InteractiveCycleCard: React.FC<InteractiveCycleCardProps> = ({ type, hours
         onClick={() => setExpandedState(true)}
         className="flex flex-col items-center justify-between p-4 sm:p-5 bg-[#111318] rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 w-full aspect-square transition-all duration-300 cursor-pointer hover:scale-[1.05] hover:border-[#c5a059]/30 hover:shadow-[0_0_20px_rgba(197,160,89,0.1)]"
       >
-        <div className="relative w-full aspect-square max-w-[70px] sm:max-w-[80px] flex items-center justify-center">
+        <div className="relative w-full aspect-square max-w-[120px] sm:max-w-[80px] flex items-center justify-center">
           <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
             <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-white/5" />
             <circle

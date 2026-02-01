@@ -221,6 +221,7 @@ const SelfLogsTab: React.FC<SelfLogsTabProps> = ({ language, logs }) => {
                         </g>
 
                         {cluster.particles.map((p, pIdx) => {
+                            const stableKey = `${cluster.month}-${pIdx}-${p.id || 'particle'}`;
                             const rotationSpeed = 0.15 + (pIdx % 3) * 0.05; 
                             const dir = pIdx % 2 === 0 ? 1 : -1;
                             const currentAngle = p.angleOffset + time * rotationSpeed * dir;
@@ -230,7 +231,7 @@ const SelfLogsTab: React.FC<SelfLogsTabProps> = ({ language, logs }) => {
                             const scaleP = 0.7 + z * 0.3; 
                             const opacityP = 0.6 + z * 0.4;
                             return (
-                                <g key={p.id} transform={`translate(${px}, ${py}) scale(${scaleP})`} className="pointer-events-none">
+                                <g key={stableKey} transform={`translate(${px}, ${py}) scale(${scaleP})`} className="pointer-events-none">
                                     <circle r={p.isHighlight ? 4 : 2} fill={p.isHighlight ? "#c5a059" : "white"} opacity={opacityP * 0.3} filter="url(#starGlow)" />
                                     <circle r={p.isHighlight ? 2.5 : 1.5} fill={p.isHighlight ? "#c5a059" : "white"} opacity={opacityP} />
                                 </g>

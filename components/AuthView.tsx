@@ -130,6 +130,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin, language }) => {
                   <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#c5a059] transition-colors" />
                   <input 
                     type="text"
+                    maxLength={30}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Commander Alias"
@@ -147,6 +148,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin, language }) => {
                 <input 
                   type="email"
                   value={email}
+                  maxLength={30}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nasa-id@nexus.gov"
                   className="w-full h-14 bg-black/40 border border-white/5 rounded-2xl pl-12 pr-4 text-sm text-white placeholder:text-white/5 outline-none focus:border-[#c5a059]/40 focus:ring-1 focus:ring-[#c5a059]/20 transition-all"
@@ -183,6 +185,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin, language }) => {
                   <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#c5a059] transition-colors" />
                   <input 
                     type="password"
+                    maxLength={20}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"

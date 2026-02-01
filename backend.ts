@@ -1,8 +1,30 @@
 
-import { UserSettings, Milestone, LogEntry, UserAnalytics, CoreAttributes, FutureLetter, UserProfile, DailyTask, DailyTaskHistory } from './types';
+import { UserSettings, Milestone, LogEntry, UserAnalytics, CoreAttributes, FutureLetter, UserProfile, DailyTask, DailyTaskHistory,LoginApiResponse } from './types';
 import { INITIAL_SETTINGS, MOCK_MILESTONES, MOCK_LOGS } from './constants';
+import axios from 'axios';
+import Cookie from 'js-cookie';
+import { userInfo } from 'os';
 // import { GoogleGenAI } from "@google/genai";
-
+// 保存数据到 Cookie，支持过期时间（天数）
+export const SaveDataToCookie = (key: string, value: any, days: number) => {
+  Cookie.set(key, JSON.stringify(value), { expires: days });
+};
+// 同时添加获取和删除 Cookie 的辅助函数
+export const GetDataFromCookie = (key: string): any => {
+  const cookieValue = Cookie.get(key);
+  if (cookieValue) {
+    try {
+      return JSON.parse(cookieValue);
+    } catch (error) {
+      return cookieValue; // 如果不是 JSON 格式，直接返回
+    }
+  }
+  return null;
+};
+// 删除指定的 Cookie
+export const RemoveCookie = (key: string) => {
+  Cookie.remove(key);
+};
 /**
  * 吐司通知類型定義
  */
@@ -114,26 +136,27 @@ class BackendService {
    * 包含核心演算法：根據上次同步到現在的時間差，計算屬性的「熵增衰減」。
    */
   private async getActiveAttributes(): Promise<CoreAttributes> {
+    const attributes=GetDataFromCookie('user').attributes;
     const stored = localStorage.getItem(this.ATTR_KEY);
-    const lastSync = localStorage.getItem(this.LAST_SYNC_KEY);
+    const lastSync = String(new Date(attributes.last_sync_at).getTime());
+    console.log('lastSync', lastSync);
     const now = Date.now();
 
     // 初始屬性值
     let attrs: CoreAttributes = stored 
       ? JSON.parse(stored) 
       : { health: 0.7, mind: 0.5, skill: 0.4, social: 0.6, adventure: 0.3, spirit: 0.5 };
-
     // 計算衰減
     if (lastSync) {
       const hoursPassed = (now - parseInt(lastSync)) / (1000 * 60 * 60);
       const decay = hoursPassed * this.ENTROPY_RATE;
       attrs = {
-        health: Math.max(0.1, attrs.health - decay),
-        mind: Math.max(0.1, attrs.mind - decay),
-        skill: Math.max(0.1, attrs.skill - decay),
-        social: Math.max(0.1, attrs.social - decay),
-        adventure: Math.max(0.1, attrs.adventure - decay),
-        spirit: Math.max(0.1, attrs.spirit - decay),
+        health: Math.max(0.1, attributes.health - decay),
+        mind: Math.max(0.1, attributes.mind - decay),
+        skill: Math.max(0.1, attributes.skill - decay),
+        social: Math.max(0.1, attributes.social - decay),
+        adventure: Math.max(0.1, attributes.adventure - decay),
+        spirit: Math.max(0.1, attributes.spirit - decay),
       };
     }
 
@@ -195,34 +218,88 @@ class BackendService {
    * 用戶登入協議
    * 支持密碼或 8 位摩斯密碼驗證。
    */
-  async login(email: string, password?: string, morseCode?: string): Promise<{ name: string; success: boolean }> {
-    const usersKey = 'chronos_users_list';
-    const users = JSON.parse(localStorage.getItem(usersKey) || '[]');
-    const user = users.find((u: any) => u.email === email && (morseCode ? u.morseCode === morseCode : u.password === password));
-    
-    if (user || (email === 'test@chronos.com' && (password === '123456' || morseCode === '........'))) {
-      const name = user?.name || 'Chronos Pioneer';
-      await this.updateUserProfile({ name });
-      await this.getActiveAttributes();
-      return { name, success: true };
+
+  
+  
+  async login(
+    email: string,
+    password?: string,
+    morseCode?: string
+  ): Promise<LoginApiResponse>  {
+    try {
+      const response = await axios.post<Promise<LoginApiResponse> >(
+        '/api/auth/login',  // 後端登入端點
+        {
+          email,
+          password,        // 可選
+          morse_code: morseCode,  // 可選，snake_case 與後端一致
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 8000,
+        }
+      );
+      const userData = response.data;
+      console.log(response.data);
+      if ((await response.data).success) {
+        SaveDataToCookie('user', userData, 7);
+        const user = (await userData).user;
+        const settings = (await userData).settings;
+        // 成功後執行原有的後續操作
+        await this.updateUserProfile({ name: user.name,avatarUrl: user.avatarUrl?  user.avatarUrl : null });
+        await this.updateSettings(settings)
+        await this.getActiveAttributes();
+        return response.data;
+      } else {
+        throw new Error('IDENTITY_MISMATCH: ACCESS_DENIED');
+      }
+    } catch (error: any) {
+      // 統一處理後端錯誤
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        // 後端返回的錯誤訊息優先
+        throw new Error(error.response.data.message);
+      }
+      // 其他情況（網路錯誤等）
+      throw new Error('IDENTITY_MISMATCH: ACCESS_DENIED');
     }
-    throw new Error('IDENTITY_MISMATCH: ACCESS_DENIED');
   }
 
   /**
    * 初始化連結 (註冊)
    */
   async register(name: string, email: string, password: string, morseCode?: string): Promise<{ name: string; success: boolean }> {
-    const usersKey = 'chronos_users_list';
-    const users = JSON.parse(localStorage.getItem(usersKey) || '[]');
-    if (users.find((u: any) => u.email === email)) throw new Error('SIGNAL_COLLISION: USER_EXISTS');
-    
-    const newUser = { name, email, password, morseCode };
-    users.push(newUser);
-    localStorage.setItem(usersKey, JSON.stringify(users));
-    await this.updateUserProfile({ name });
-    return { name, success: true };
+    if (!name || !email || !password) throw new Error('请填写所有字段');
+    if (password.length < 8) throw new Error('密码长度不能小于8位');
+    //如果莫斯密码全是点则返回警告
+    if (morseCode && morseCode.split('').every(char => char === '.')) throw new Error('莫斯密码不能全是点');
+    try {
+      const response = await axios.post<{ name: string; success: boolean }>(
+        '/api/auth/register',
+        {
+          name,
+          email,
+          password,
+          morse_code: morseCode,
+        }
+      );
+      const userInfo = {
+        name:name,
+        password:password
+      };
+      SaveDataToCookie('temp_userinfo',userInfo,7);
+      // 後端成功時會回 { name, success: true }
+      return response.data;
+
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        throw new Error(error.response.data.message); // 如 "SIGNAL_COLLISION: USER_EXISTS"
+      }
+      throw new Error('註冊失敗，請稍後再試');
+    }
   }
+
 
   /**
    * 獲取指揮官個人檔案

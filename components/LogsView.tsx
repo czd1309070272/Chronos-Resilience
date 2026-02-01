@@ -333,7 +333,8 @@ const CreateLogOverlay: React.FC<{ language: 'en' | 'zh-TW'; onClose: () => void
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Fix: Use ReturnType<typeof setTimeout> to avoid 'NodeJS' namespace issues in browser environment.
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = translations[language].logs;
 
   const tagOptions: {label: string, type: 'growth'|'insight'|'mindfulness'}[] = [

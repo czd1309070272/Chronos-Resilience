@@ -9,9 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "^19.2.3",
+    "axios": "^1.13.4",
+    "js-cookie": "^3.0.5",
+    "lucide-react": "^0.563.0",
     "react": "^19.2.3",
-    "lucide-react": "^0.563.0"
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

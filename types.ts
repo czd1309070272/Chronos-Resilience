@@ -66,6 +66,17 @@ export interface UserProfile {
   avatarUrl?: string;
 }
 
+/**
+ * 從後端 API 傳回的完整用戶帳戶數據
+ */
+export interface UserAccount {
+  id: number;
+  name: string;
+  email: string;
+  avatar_url: string | null;
+  created_at: string | null;
+}
+
 export interface UserSettings {
   language: 'en' | 'zh-TW';
   birthDate: string; // "YYYY-MM-DD"
@@ -102,4 +113,11 @@ export interface UserAnalytics {
     focusScore: number;
     booksRead: number;
   };
+}
+
+export interface LoginApiResponse {
+  success: boolean;
+  user: UserProfile;
+  settings: UserSettings;
+  attributes: CoreAttributes;
 }

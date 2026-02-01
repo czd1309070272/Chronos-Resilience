@@ -23,7 +23,6 @@ import AnimatedPercentage from './components/AnimatedPercentage';
 import AuthView from './components/AuthView';
 import GravityStardust from './components/GravityStardust';
 import NotificationToast, { ToastType } from './components/NotificationToast';
-
 interface ToastMessage {
   id: string;
   message: string;
@@ -127,8 +126,8 @@ const App: React.FC = () => {
     setTimeout(() => {
       backend.notify(
         settings.language === 'en' 
-          ? `Welcome back, Commander ${name}. Link stabilized.` 
-          : `歡迎回來，${name} 指揮官。同步鏈接已穩定。`, 
+          ? `Welcome back, Commander ${profile.name}. Link stabilized.` 
+          : `歡迎回來，${profile.name} 指揮官。同步鏈接已穩定。`, 
         'success'
       );
     }, 1500);
