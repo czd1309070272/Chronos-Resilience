@@ -1,0 +1,7 @@
+{
+  "name": "Chronos: Life Progress & Milestones",
+  "description": "A sophisticated life tracking application designed to visualize life progress, track time units (Yearly, Monthly, Daily), and manage a bucket list with a cinematic dark theme and high-precision metrics.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
